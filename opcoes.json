@@ -1,0 +1,27 @@
+{
+    "grupos": {
+        "1": "Resultado Final",
+        "3": "Dupla Hipótese",
+        "7": "Vencedor do Jogo",
+        "17": "Total de Gols / Pontos (Mais / Menos)",
+        "18": "Handicap",
+        "20": "Total da Equipe",
+        "22": "Total Asiático",
+        "101": "Moneyline"
+    },
+    "tipos": {
+        "1": "Casa",
+        "2": "Empate",
+        "3": "Fora",
+        "7": "Competidor 1",
+        "8": "Competidor 2",
+        "9": "Mais",
+        "10": "Menos",
+        "11": "Mais",
+        "12": "Menos",
+        "13": "Mais",
+        "14": "Menos",
+        "180": "Sim",
+        "181": "Não"
+    }
+}

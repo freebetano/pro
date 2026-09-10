@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Não Encontrada | FreeBetano</title>
+    
+    <!-- Meta tags básicas -->
+    <meta name="description" content="Oops! A página que você procurava foi para fora de campo. Volte para a FreeBetano e continue apostando com saldo fictício e odds reais.">
+    <link rel="canonical" href="https://freebetano.com">
+
+    <!-- Ícones apontando para icone.png na mesma pasta -->
+    <link rel="icon" type="image/png" href="icone.png">
+    <link rel="apple-touch-icon" href="icone.png">
+    <link rel="shortcut icon" href="logo.png">
+
+    <style>
+        :root {
+            --brand-orange: #f75c2e;
+            --bg-dark: #0b0e14;
+            --card-bg: #12151d;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+        justify-content: center;
+}
+
+.logo-img {
+    height: 40px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+    display: block;
+}
+
+.logo-area h1 {
+    font-size: 1.85rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 750;
+    letter-spacing: 0px;
+    text-transform: none;
+    margin: 0;
+    display: flex;
+}
+
+.logo-free {
+    background: linear-gradient(135deg, #0b6654 0%, #179172 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.logo-betano {
+    background: linear-gradient(135deg, #d96b43 0%, #f75c2e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+        .error-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(12px);
+        }
+
+        .error-logo {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 4px 12px rgba(247, 92, 46, 0.3));
+        }
+
+        .error-code {
+            font-size: 5rem;
+            font-weight: 800;
+            color: var(--brand-orange);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            letter-spacing: -2px;
+        }
+
+        .error-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.75rem;
+        }
+
+        .error-desc {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 1.8rem;
+        }
+
+        .btn-home {
+            display: inline-block;
+            background-color: var(--brand-orange);
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(247, 92, 46, 0.4);
+            transition: filter 0.2s ease, transform 0.1s ease;
+            width: 100%;
+        }
+
+        .btn-home:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-home:active {
+            transform: scale(0.98);
+        }
+
+        .footer-tag {
+            margin-top: 1.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="error-container">
+        <div class="logo-area" onclick="voltarParaLista()">
+            <img src="logo.png" alt="Logo FreeBetano" class="logo-img">
+            <h1><span class="logo-free">Free</span><span class="logo-betano">Betano</span></h1>
+        </div>
+        
+        <div class="error-code">404</div>
+        <h1 class="error-title">Lance Anulado!</h1>
+        <p class="error-desc">Parece que esta página foi para fora de campo ou não existe mais. Volte para a página principal para continuar testando suas estratégias com saldo fictício e odds reais.</p>
+        
+        <a href="/" class="btn-home">Voltar ao Início</a>
+        
+        <div class="footer-tag">FreeBetano • Diversão Sem Riscos</div>
+    </div>
+
+</body>
+</html>
