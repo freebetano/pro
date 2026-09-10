@@ -27,3 +27,5 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: node apuracao.mjs
         working-directory: ./apuracao
+
+# Ativando cron automatico
