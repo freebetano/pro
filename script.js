@@ -572,20 +572,43 @@ async function apostarIndividual(index) {
     if (esporteAtualSelecionado) {
         try {
             const tipoEndpoint = modoExibicaoAtual === 'line' ? 'line' : 'live';
-            const workerUrl = `https://api.freebetano12.workers.dev/?type=${tipoEndpoint}&ms=${encodeURIComponent(esporteAtualSelecionado.id)}`;
+            const workerUrl = `https://api.freebetano12.workers.dev/?type=${tipoEndpoint}&gameId=${item.id}`;
             const response = await fetch(workerUrl);
             
             if (response.ok) {
                 const jsonBruto = await response.json();
-                const jogosBrutos = Array.isArray(jsonBruto) ? jsonBruto : (jsonBruto.value || jsonBruto.games || []);
-                const jogoAtualizado = jogosBrutos.find(j => String(j.id) === String(item.id));
+                let jogoAtualizado = null;
 
-                if (jogoAtualizado && jogoAtualizado.eventGroups) {
+                if (Array.isArray(jsonBruto)) {
+                    jogoAtualizado = jsonBruto.find(j => String(j.id) === String(item.id)) || jsonBruto[0];
+                } else if (jsonBruto && String(jsonBruto.id) === String(item.id)) {
+                    jogoAtualizado = jsonBruto;
+                } else if (jsonBruto && jsonBruto.value) {
+                    const val = jsonBruto.value;
+                    jogoAtualizado = Array.isArray(val) ? (val.find(j => String(j.id) === String(item.id)) || val[0]) : val;
+                }
+
+                // Coleta unificada e abrangente de todos os grupos possíveis (principais, centrais e sub-jogos)
+                const coletarTodosGruposValidacao = (j) => {
+                    let todos = [];
+                    if (j.eventGroups && Array.isArray(j.eventGroups)) todos = todos.concat(j.eventGroups);
+                    if (j.centralBlockEventGroups && Array.isArray(j.centralBlockEventGroups)) todos = todos.concat(j.centralBlockEventGroups);
+                    if (j.subGamesForMainGame && Array.isArray(j.subGamesForMainGame)) {
+                        j.subGamesForMainGame.forEach(sg => {
+                            if (sg.eventGroups && Array.isArray(sg.eventGroups)) todos = todos.concat(sg.eventGroups);
+                        });
+                    }
+                    return todos;
+                };
+
+                if (jogoAtualizado) {
                     let oddAtualizada = null;
+                    const gruposApi = coletarTodosGruposValidacao(jogoAtualizado);
 
+                    // 1. Tenta validar de forma cirúrgica pelo gIndex, sIndex e eIndex exatos
                     if (item.gIndex !== null && item.sIndex !== null && item.eIndex !== null) {
                         try {
-                            const grupoAPI = jogoAtualizado.eventGroups[item.gIndex];
+                            const grupoAPI = gruposApi[item.gIndex];
                             if (grupoAPI && grupoAPI.events && grupoAPI.events[item.sIndex] && grupoAPI.events[item.sIndex][item.eIndex]) {
                                 const valorBrutoOdd = grupoAPI.events[item.sIndex][item.eIndex].cfView;
                                 if (valorBrutoOdd && valorBrutoOdd !== "-") {
@@ -595,8 +618,9 @@ async function apostarIndividual(index) {
                         } catch (e) {}
                     }
 
+                    // 2. Fallback de segurança para o mercado principal (1X2 / Moneyline) caso o índice direto falhe
                     if (oddAtualizada === null || isNaN(oddAtualizada)) {
-                        const grupoOficial = jogoAtualizado.eventGroups.find(g => g.groupId === 1 || g.groupId === 101 || g.groupId === 7 || g.groupId === 3);
+                        const grupoOficial = gruposApi.find(g => g.groupId === 1 || g.groupId === 101 || g.groupId === 7 || g.groupId === 3);
                         if (grupoOficial && grupoOficial.events && grupoOficial.events.length > 0) {
                             try {
                                 if (item.selecao.includes("1") || item.selecao.startsWith("1")) {
