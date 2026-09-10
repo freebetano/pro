@@ -47,7 +47,11 @@ async function carregarJogosAoVivo(msValue, nomeEsporte, silencioso = false) {
             const op1 = jogo.opponent1 ? jogo.opponent1.fullName : "";
             const op2 = jogo.opponent2 ? jogo.opponent2.fullName : "";
 
+
             if (!op1 || !op2) return false;
+
+          // FILTRO ADICIONADO: Exclui jogos que não possuem estatísticas (gameId)
+            if (!jogo.statisticInfo || !jogo.statisticInfo.gameId) return false;
             
             const ehGenerico = (
                 op1.includes("Home") || op2.includes("Away") ||
