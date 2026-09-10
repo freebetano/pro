@@ -1,0 +1,9 @@
+{
+  "name": "f-bet",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "*",
+    "firebase-admin": "^11.11.0"
+  }
+}
