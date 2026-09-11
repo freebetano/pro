@@ -204,30 +204,22 @@ window.pedirVerificacaoAposta = async function(idUnico) {
     const containerMsg = document.getElementById(`msg_rev_${idUnico}`);
     if (!aposta) return;
 
-    // Caso já tenha sido revisada anteriormente
     if (aposta.jaPediuVerificacao) {
-        if (containerMsg) {
-            containerMsg.innerHTML = `<span style="color: #EF4444; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-top: 4px;">Esta aposta já foi revisada anteriormente e não pode ser solicitada de novo.</span>`;
-        }
         return;
     }
 
-    // Marca a flag de verificação
     aposta.jaPediuVerificacao = true;
 
-    // Desativa o link "Pedir Revisão" imediatamente para evitar cliques duplos
     const containerAcao = document.getElementById(`box_rev_link_${idUnico}`);
     if (containerAcao) {
         containerAcao.style.pointerEvents = 'none';
         containerAcao.style.opacity = '0.5';
     }
 
-    // 1. Exibe a mensagem em vermelho ANTES de qualquer alteração no banco
     if (containerMsg) {
         containerMsg.innerHTML = `<span style="color: #179172; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-top: 4px;">Seu resultado foi cancelado e enviado novamente para analise.</span>`;
     }
 
-    // 2. Aguarda 2.5 segundos com a mensagem visível na tela antes de alterar o status e salvar
     setTimeout(async () => {
         const statusLower = (aposta.status || '').trim().toLowerCase();
         if (statusLower === 'ganha' || statusLower === 'ganhou') {
@@ -245,11 +237,9 @@ window.pedirVerificacaoAposta = async function(idUnico) {
             }
         }
 
-        // 3. Agora muda o status para Pendente e sincroniza no Firestore
         aposta.status = 'Pendente';
         await salvarEstadoNuvem(historicoCacheNuvem, window.saldo);
 
-        // Atualiza a visualização da aba
         const modal = document.getElementById('historyModal');
         if (modal && modal.style.display === 'flex') {
             renderizarListaHistorico();
@@ -343,8 +333,9 @@ function renderizarListaHistorico() {
             </button>
         ` : '';
 
+        // Renderiza o botão de revisão APENAS se a aposta ainda NÃO foi revisada
         let secaoVerificacaoHtml = '';
-        if (abaHistoricoAtual === 'resolvidas') {
+        if (abaHistoricoAtual === 'resolvidas' && !ap.jaPediuVerificacao) {
             secaoVerificacaoHtml = `
                 <hr style="border: none; border-top: 1px solid #334155; width: 100%; margin: 0.6rem 0 0.4rem 0;">
                 <div style="display: flex; flex-direction: column; gap: 4px;">
