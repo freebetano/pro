@@ -4,6 +4,7 @@
 
 (function() {
     window.usuarioLogadoFirebase = null;
+    window.usuarioIsAdmin = false;
     window.saldo = 10000.00;
 
     window.mostrarToast = function(mensagem, tipo = 'info') {
@@ -88,6 +89,7 @@
                         await carregarOuCriarDadosUsuarioFirestore(user);
                     } else {
                         window.usuarioLogadoFirebase = null;
+                        window.usuarioIsAdmin = false;
                         window.saldo = 10000.00;
                         if (typeof atualizarSaldoUI === 'function') atualizarSaldoUI();
                     }
@@ -107,12 +109,15 @@
                 nome: user.displayName || "Usuário",
                 email: user.email,
                 saldo: 10000.00,
+                isAdmin: false,
                 historicoApostas: []
             });
             window.saldo = 10000.00;
+            window.usuarioIsAdmin = false;
         } else {
             const data = userSnap.data();
             window.saldo = typeof data.saldo === 'number' ? data.saldo : 10000.00;
+            window.usuarioIsAdmin = data.isAdmin === true;
         }
 
         if (typeof atualizarSaldoUI === 'function') atualizarSaldoUI();
@@ -141,6 +146,7 @@
             async () => {
                 try {
                     await signOut(window.firebaseAuth);
+                    window.usuarioIsAdmin = false;
                     window.mostrarToast("Sessão encerrada com sucesso.", "info");
                     setTimeout(() => location.reload(), 600);
                 } catch(e) {
@@ -177,7 +183,7 @@
         dropdown.style.display = isOpen ? 'none' : 'block';
     };
 
-   function renderizarConteudoDropdownPerfil(dropdown) {
+    function renderizarConteudoDropdownPerfil(dropdown) {
         if (!window.usuarioLogadoFirebase) {
             dropdown.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 1rem; box-sizing: border-box; padding: 0.2rem;" onclick="event.stopPropagation()">
@@ -199,13 +205,20 @@
             const qtdAbertas = typeof obterQuantidadeApostasAbertas === 'function' ? obterQuantidadeApostasAbertas() : 0;
             const nomeExibicao = user.displayName || user.email || 'Usuário';
 
-            // Aumentamos a largura base do dropdown inline para acomodar perfeitamente os textos longos
             dropdown.style.width = '310px';
+
+            // Botão condicional do Painel Admin
+            const botaoAdminHtml = window.usuarioIsAdmin ? `
+                <button onclick="window.location.href='/admin.html'" style="background: rgba(20, 184, 166, 0.08); color: #14b8a6; border: 1px solid rgba(20, 184, 166, 0.25); padding: 0.75rem 0.9rem; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.85rem; text-align: left; display: flex; align-items: center; justify-content: space-between; transition: background 0.2s;" onmouseover="this.style.background='rgba(20, 184, 166, 0.16)'" onmouseout="this.style.background='rgba(20, 184, 166, 0.08)'">
+                    <span>Painel Admin</span>
+                    <span style="font-size: 0.9rem;">⚙️</span>
+                </button>
+            ` : '';
 
             dropdown.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 0.75rem; box-sizing: border-box; padding: 0.2rem;" onclick="event.stopPropagation()">
                     
-                    <!-- Perfil Logado com quebra limpa do nome -->
+                    <!-- Perfil Logado -->
                     <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 0.8rem 0.9rem; display: flex; align-items: center; gap: 12px;">
                         <img src="${user.photoURL || ''}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;" onerror="this.style.display='none'">
                         <div style="display: flex; flex-direction: column; overflow: hidden; width: 100%;">
@@ -214,7 +227,7 @@
                         </div>
                     </div>
 
-                    <!-- Saldo Disponível Organizado -->
+                    <!-- Saldo Disponível -->
                     <div style="background: rgba(23, 145, 114, 0.08); border: 1px solid rgba(23, 145, 114, 0.25); border-radius: 12px; padding: 0.8rem 0.9rem; display: flex; flex-direction: column; gap: 4px;">
                         <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Saldo Disponível</span>
                         <span style="font-size: 1.15rem; color: var(--accent-color, #10b981); font-weight: 800; letter-spacing: 0.3px;">R$ ${saldoFormatado}</span>
@@ -226,6 +239,8 @@
                             <span>Boletim de Apostas</span>
                             <span style="background: var(--brand-orange, #f75c2e); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;">${qtdAbertas}</span>
                         </button>
+
+                        ${botaoAdminHtml}
 
                         <button onclick="deslogarPerfil()" style="background: rgba(239, 68, 68, 0.06); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.15); padding: 0.75rem 0.9rem; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.85rem; text-align: left; transition: background 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.12)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.06)'">
                             Sair da Conta
