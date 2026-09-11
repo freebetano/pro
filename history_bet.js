@@ -224,7 +224,7 @@ window.pedirVerificacaoAposta = async function(idUnico) {
 
     // 1. Exibe a mensagem em vermelho ANTES de qualquer alteração no banco
     if (containerMsg) {
-        containerMsg.innerHTML = `<span style="color: #EF4444; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-top: 4px;">Seu resultado foi cancelado e enviado novamente para analise.</span>`;
+        containerMsg.innerHTML = `<span style="color: #179172; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-top: 4px;">Seu resultado foi cancelado e enviado novamente para analise.</span>`;
     }
 
     // 2. Aguarda 2.5 segundos com a mensagem visível na tela antes de alterar o status e salvar
