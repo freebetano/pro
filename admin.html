@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - FluxionBet</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --header-bg: #111111;
+            --card-bg: #151d30;
+            --border-color: #2a3655;
+            --border-header: #242b3d;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --brand-teal: #179172;
+            --brand-orange: #f75c2e;
+            --green: #10b981;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --purple: #a855f7;
+            --teal: #14b8a6;
+            --gray-cancel: #64748b;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            scrollbar-width: thin;
+            scrollbar-color: #222 var(--bg-color);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--brand-teal);
+        }
+
+        body { 
+            background: var(--bg-color); 
+            color: var(--text-main); 
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-header);
+            padding: 0.75rem 1.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .logo-img {
+            height: 38px;
+            width: auto;
+            max-width: 120px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .logo-area h1 {
+            font-size: 1.85rem;
+            font-weight: 750;
+            letter-spacing: 0px;
+            margin: 0;
+            display: flex;
+            line-height: 1;
+        }
+
+        .logo-fluxion {
+            background: linear-gradient(135deg, #0b6654 0%, #179172 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-bet {
+            background: linear-gradient(135deg, #d96b43 0%, #f75c2e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-container {
+            position: relative;
+        }
+
+        .profile-icon {
+            width: 38px;
+            height: 38px;
+            background-color: #222;
+            border: 1px solid #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .profile-icon:hover {
+            background-color: var(--brand-teal);
+            border-color: var(--brand-teal);
+            color: #fff;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            right: 0;
+            top: 48px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            min-width: 220px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 1500;
+        }
+
+        .profile-dropdown.show {
+            display: flex;
+        }
+
+        .profile-user-info {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-user-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .profile-user-role {
+            font-size: 0.75rem;
+            color: var(--brand-teal);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .profile-dropdown button {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            text-align: left;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.2s, color 0.2s;
+            width: 100%;
+        }
+
+        .profile-dropdown button:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--brand-orange);
+        }
+
+        .container { 
+            max-width: 1050px; 
+            margin: 0 auto; 
+            padding: 2rem 1rem;
+        }
+
+        .btn { 
+            padding: 0.5rem 1rem; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            border: 1px solid transparent; 
+            font-size: 0.85rem; 
+            transition: 0.2s; 
+        }
+
+        .btn-google { background: #fff; color: #000; }
+
+        /* Controles: Linha centralizada exibindo apenas o seletor */
+        .controles-barra {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.4rem;
+            width: 100%;
+        }
+
+        .select-usuario-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .select-usuario-container label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .select-usuario {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0 0.9rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            height: 38px;
+            line-height: 38px;
+            outline: none;
+            cursor: pointer;
+            width: 280px;
+        }
+
+        .select-usuario:focus {
+            border-color: var(--brand-orange);
+        }
+
+        .filtro-tabs { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 1.5rem; 
+            flex-wrap: nowrap; 
+            overflow-x: auto; 
+            padding-bottom: 6px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filtro-tabs button { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            color: var(--text-muted); 
+            padding: 0.5rem 1.1rem; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 0.82rem; 
+            transition: 0.2s; 
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .filtro-tabs button.ativo { 
+            background: var(--brand-orange); 
+            color: #fff; 
+            border-color: var(--brand-orange); 
+        }
+
+        .bet-card { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            padding: 1.2rem; 
+            margin-bottom: 1rem; 
+            transition: opacity 0.2s; 
+        }
+
+        .card-row-user {
+            text-align: center;
+            font-size: 0.92rem;
+            color: #fff;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .card-row-date {
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 0.6rem;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+            padding-bottom: 0.5rem;
+        }
+
+        .card-row-status {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .card-confronto {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.4rem;
+            text-align: center;
+        }
+
+        .card-palpite-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .card-actions-resultados {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .btn-ver-resultados {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0.4rem 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-ver-resultados:hover {
+            border-color: var(--brand-orange);
+            color: var(--brand-orange);
+        }
+
+        .bet-actions-wrapper {
+            border-top: 1px solid var(--border-color);
+            padding-top: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .bet-actions-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .bet-actions-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            width: 100%;
+        }
+
+        .bet-actions-row .btn {
+            padding: 0.45rem 0.2rem;
+            font-size: 0.8rem;
+            text-align: center;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-win { background: rgba(16, 185, 129, 0.15); color: var(--green); border-color: var(--green); }
+        .btn-win:hover { background: var(--green); color: #fff; }
+        .btn-loss { background: rgba(239, 68, 68, 0.15); color: var(--red); border-color: var(--red); }
+        .btn-loss:hover { background: var(--red); color: #fff; }
+        .btn-pendente { background: rgba(245, 158, 11, 0.15); color: var(--yellow); border-color: var(--yellow); }
+        .btn-pendente:hover { background: var(--yellow); color: #000; }
+        .btn-cancelar { background: rgba(100, 116, 139, 0.18); color: #cbd5e1; border-color: var(--gray-cancel); }
+        .btn-cancelar:hover { background: var(--gray-cancel); color: #fff; }
+
+        .tag-revisao { background: rgba(247, 92, 46, 0.2); color: var(--brand-orange); border: 1px solid var(--brand-orange); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+        
+        .tag-resolucao { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; display: inline-block; }
+        .tag-admin { background: rgba(20, 184, 166, 0.15); color: var(--teal); border: 1px solid var(--teal); }
+        .tag-ia { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid var(--purple); }
+
+        .empty-msg { text-align: center; color: var(--text-muted); padding: 3rem; background: var(--card-bg); border-radius: 8px; border: 1px dashed var(--border-color); }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            width: 100%;
+            max-width: 850px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.4rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-close:hover { color: #fff; }
+        .modal-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 0.6rem 1rem;
+            }
+            .logo-area h1 {
+                font-size: 1.5rem;
+            }
+            .logo-img {
+                height: 32px;
+            }
+            .controles-barra {
+                flex-wrap: wrap;
+            }
+            .select-usuario {
+                max-width: 100%;
+            }
+        }
+    </style>
+
+    <script src="./config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <div class="logo-area" onclick="window.location.reload()">
+            <img src="logo.png" alt="Logo FluxionBet" class="logo-img" onerror="this.style.display='none'">
+            <h1><span class="logo-fluxion">Fluxion</span><span class="logo-bet">Bet</span></h1>
+        </div>
+    </div>
+
+    <div class="user-menu" id="authSection">
+        <button class="btn btn-google" id="btnLoginGoogle" onclick="executarLogin()">Entrar com Google</button>
+    </div>
+</header>
+
+<div class="container">
+    <div id="painelContent" style="display: none;">
+        <!-- Barra de Controle com apenas o seletor centralizado -->
+        <div class="controles-barra">
+            <div class="select-usuario-container">
+                <label for="selectUsuario">Filtrar por Usuário:</label>
+                <select id="selectUsuario" class="select-usuario" onchange="selecionarUsuario(this.value)">
+                    <option value="todos">Todos os Usuários</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filtro-tabs">
+            <button class="ativo" id="tabPendentes" onclick="setFiltro('pendentes')">Pendentes</button>
+            <button id="tabRevisao" onclick="setFiltro('revisao')">Em Revisão</button>
+            <button id="tabGanha" onclick="setFiltro('ganha')">Ganha</button>
+            <button id="tabPerdida" onclick="setFiltro('perdida')">Perdida</button>
+            <button id="tabCancelada" onclick="setFiltro('cancelada')">Cancelada</button>
+            <button id="tabAdmin" onclick="setFiltro('admin')">Resolvidas / Admin</button>
+            <button id="tabIA" onclick="setFiltro('ia')">Resolvidas / IA</button>
+            <button id="tabTodas" onclick="setFiltro('todas')">Todas as Apostas</button>
+        </div>
+
+        <div id="feedApostas">
+            <div class="empty-msg">Carregando apostas...</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="statsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span style="font-weight: 600; font-size: 0.9rem;" id="modalTitulo">Resultados da Partida</span>
+            <button class="modal-close" onclick="fecharModalStats()">&times;</button>
+        </div>
+        <iframe class="modal-iframe" id="statsIframe" src=""></iframe>
+    </div>
+</div>
+
+<script>
+    if (!window.meuAppConfig) {
+        alert("Erro: config.js não carregou window.meuAppConfig corretamente.");
+    }
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(window.meuAppConfig);
+    }
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let filtroAtual = 'pendentes';
+    let usuarioSelecionado = 'todos';
+    let apostasCarregadas = [];
+
+    const authSection = document.getElementById('authSection');
+    const painelContent = document.getElementById('painelContent');
+
+    function executarLogin() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(erro => {
+            console.error("Erro no login:", erro);
+            alert("Falha no login Google: " + erro.message);
+        });
+    }
+
+    function executarLogout() {
+        auth.signOut();
+    }
+
+    function toggleDropdownPerfil(e) {
+        e.stopPropagation();
+        const drop = document.getElementById('profileDropdownAdmin');
+        if (drop) drop.classList.toggle('show');
+    }
+
+    window.addEventListener('click', () => {
+        const drop = document.getElementById('profileDropdownAdmin');
+        if (drop && drop.classList.contains('show')) {
+            drop.classList.remove('show');
+        }
+    });
+
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            authSection.innerHTML = `<span style="font-size: 0.85rem; color: var(--text-muted);">Checando acesso...</span>`;
+
+            try {
+                const userDoc = await db.collection("usuarios").doc(user.uid).get();
+
+                if (userDoc.exists && userDoc.data().isAdmin === true) {
+                    const nomeExibicao = user.displayName || user.email || 'Admin';
+                    
+                    authSection.innerHTML = `
+                        <div class="profile-container">
+                            <div class="profile-icon" onclick="toggleDropdownPerfil(event)" title="Perfil Administrador">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <div class="profile-dropdown" id="profileDropdownAdmin" onclick="event.stopPropagation()">
+                                <div class="profile-user-info">
+                                    <div class="profile-user-name">${nomeExibicao}</div>
+                                    <div class="profile-user-role">Administrador Autorizado</div>
+                                </div>
+                                <button onclick="carregarApostas()">🔄 Atualizar Apostas</button>
+                                <button onclick="executarLogout()">Sair da Conta</button>
+                            </div>
+                        </div>
+                    `;
+
+                    painelContent.style.display = 'block';
+                    carregarApostas();
+                } else {
+                    authSection.innerHTML = `
+                        <span style="font-size: 0.85rem; color: var(--red);">Não autorizado</span>
+                    `;
+                    painelContent.style.display = 'none';
+                    alert("Acesso Negado");
+                }
+            } catch (e) {
+                console.error("Erro de permissão:", e);
+                authSection.innerHTML = `<span style="font-size: 0.85rem; color: var(--red);">Erro no Firestore</span>`;
+                painelContent.style.display = 'none';
+            }
+        } else {
+            authSection.innerHTML = `<button class="btn btn-google" onclick="executarLogin()">Entrar com Google</button>`;
+            painelContent.style.display = 'none';
+            apostasCarregadas = [];
+        }
+    });
+
+    function setFiltro(tipo) {
+        filtroAtual = tipo;
+        document.getElementById('tabPendentes').className = tipo === 'pendentes' ? 'ativo' : '';
+        document.getElementById('tabRevisao').className = tipo === 'revisao' ? 'ativo' : '';
+        document.getElementById('tabGanha').className = tipo === 'ganha' ? 'ativo' : '';
+        document.getElementById('tabPerdida').className = tipo === 'perdida' ? 'ativo' : '';
+        document.getElementById('tabCancelada').className = tipo === 'cancelada' ? 'ativo' : '';
+        document.getElementById('tabAdmin').className = tipo === 'admin' ? 'ativo' : '';
+        document.getElementById('tabIA').className = tipo === 'ia' ? 'ativo' : '';
+        document.getElementById('tabTodas').className = tipo === 'todas' ? 'ativo' : '';
+        renderizar();
+    }
+
+    function selecionarUsuario(uid) {
+        usuarioSelecionado = uid;
+        renderizar();
+    }
+
+    async function carregarApostas() {
+        const container = document.getElementById('feedApostas');
+        container.innerHTML = `<div class="empty-msg">Consultando apostas no Firestore...</div>`;
+        apostasCarregadas = [];
+
+        try {
+            const snapshot = await db.collection("usuarios").get();
+            const mapaUsuarios = new Map();
+
+            snapshot.forEach(docSnap => {
+                const uid = docSnap.id;
+                const dados = docSnap.data();
+                
+                const nomeFinal = dados.nome || dados.displayName || ('Usuário ' + uid.substring(0, 5));
+                mapaUsuarios.set(uid, nomeFinal);
+
+                const historico = Array.isArray(dados.historicoApostas) ? dados.historicoApostas : [];
+
+                historico.forEach(ap => {
+                    apostasCarregadas.push({
+                        ...ap,
+                        userId: uid,
+                        userName: nomeFinal
+                    });
+                });
+            });
+
+            atualizarSelectUsuarios(mapaUsuarios);
+            renderizar();
+        } catch (e) {
+            container.innerHTML = `<div class="empty-msg" style="color: var(--red);">Erro ao carregar: ${e.message}</div>`;
+        }
+    }
+
+    function atualizarSelectUsuarios(mapaUsuarios) {
+        const select = document.getElementById('selectUsuario');
+        const valorSalvo = usuarioSelecionado;
+
+        let optionsHtml = '<option value="todos">Todos os Usuários</option>';
+
+        const listaOrdenada = Array.from(mapaUsuarios.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+
+        listaOrdenada.forEach(([uid, nome]) => {
+            optionsHtml += `<option value="${uid}">${nome}</option>`;
+        });
+
+        select.innerHTML = optionsHtml;
+
+        if (mapaUsuarios.has(valorSalvo) || valorSalvo === 'todos') {
+            select.value = valorSalvo;
+        } else {
+            usuarioSelecionado = 'todos';
+            select.value = 'todos';
+        }
+    }
+
+    function renderizar() {
+        const container = document.getElementById('feedApostas');
+        let lista = apostasCarregadas;
+
+        // 1. Filtro por Usuário
+        if (usuarioSelecionado !== 'todos') {
+            lista = lista.filter(a => a.userId === usuarioSelecionado);
+        }
+
+        // 2. Filtro por Abas
+        if (filtroAtual === 'pendentes') {
+            lista = lista.filter(a => (a.status || 'pendente').toLowerCase() === 'pendente' && !a.jaPediuVerificacao);
+        } else if (filtroAtual === 'revisao') {
+            lista = lista.filter(a => (a.status || 'pendente').toLowerCase() === 'pendente' && a.jaPediuVerificacao === true);
+        } else if (filtroAtual === 'ganha') {
+            lista = lista.filter(a => {
+                const s = (a.status || 'pendente').toLowerCase();
+                return s === 'ganha' || s === 'ganhou';
+            });
+        } else if (filtroAtual === 'perdida') {
+            lista = lista.filter(a => {
+                const s = (a.status || 'pendente').toLowerCase();
+                return s === 'perdida' || s === 'perdeu';
+            });
+        } else if (filtroAtual === 'cancelada') {
+            lista = lista.filter(a => (a.status || '').toLowerCase() === 'cancelada');
+        } else if (filtroAtual === 'admin') {
+            lista = lista.filter(a => {
+                const s = (a.status || 'pendente').toLowerCase();
+                const resolvida = ['ganha', 'ganhou', 'perdida', 'perdeu', 'cancelada'].includes(s);
+                return resolvida && a.resolvidoPor === 'admin';
+            });
+        } else if (filtroAtual === 'ia') {
+            lista = lista.filter(a => {
+                const s = (a.status || 'pendente').toLowerCase();
+                const resolvida = ['ganha', 'ganhou', 'perdida', 'perdeu'].includes(s);
+                return resolvida && a.resolvidoPor !== 'admin';
+            });
+        }
+
+        if (lista.length === 0) {
+            container.innerHTML = `<div class="empty-msg">Nenhuma aposta encontrada no filtro selecionado.</div>`;
+            return;
+        }
+
+        let html = '';
+        lista.forEach(ap => {
+            const statusLower = (ap.status || 'pendente').toLowerCase();
+            let corStatus = '#f59e0b';
+            if (statusLower === 'ganha' || statusLower === 'ganhou') corStatus = '#10b981';
+            if (statusLower === 'perdida' || statusLower === 'perdeu') corStatus = '#ef4444';
+            if (statusLower === 'cancelada') corStatus = '#94a3b8';
+
+            const tagRevisao = (ap.jaPediuVerificacao && statusLower === 'pendente') 
+                ? `<span class="tag-revisao">PEDIU REVISÃO</span>` 
+                : '';
+
+            let tagResolucao = '';
+            const resolvida = ['ganha', 'ganhou', 'perdida', 'perdeu'].includes(statusLower);
+            if (resolvida) {
+                if (ap.resolvidoPor === 'admin') {
+                    tagResolucao = `<span class="tag-resolucao tag-admin">Resolvido por um Admin</span>`;
+                } else {
+                    tagResolucao = `<span class="tag-resolucao tag-ia">Resolvido por IA</span>`;
+                }
+            } else if (statusLower === 'cancelada') {
+                tagResolucao = `<span class="tag-resolucao tag-admin">Cancelada pelo Admin</span>`;
+            }
+
+            const urlStatsVal = ap.urlStats || '';
+            const idJogoVal = ap.idJogo || '';
+            const nomePartidaEscaped = (ap.partida || '').replace(/'/g, "\\'");
+
+            const botaoStatsHtml = `
+                <button type="button" class="btn-ver-resultados" onclick="abrirModalStats('${urlStatsVal}', '${idJogoVal}', '${nomePartidaEscaped}')" title="Ver Estatísticas da Partida">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand-orange);">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <span>Resultados</span>
+                </button>
+            `;
+
+            html += `
+                <div class="bet-card" id="card_${ap.idUnico}">
+                    <!-- 1ª Linha: Nome do Usuário -->
+                    <div class="card-row-user">
+                        👤 <strong>${ap.userName}</strong>
+                    </div>
+
+                    <!-- 2ª Linha: Data -->
+                    <div class="card-row-date">
+                        📅 ${ap.data || 'N/D'}
+                    </div>
+
+                    <!-- 3ª Linha: Status e quem resolveu (Centralizado) -->
+                    <div class="card-row-status">
+                        <span style="color: ${corStatus}; font-weight: bold; text-transform: uppercase; font-size: 0.85rem;">
+                            ${ap.status || 'Pendente'}
+                        </span>
+                        ${tagRevisao}
+                        ${tagResolucao}
+                    </div>
+
+                    <!-- Próximas Linhas: Título do confronto -->
+                    <div class="card-confronto">${ap.partida || 'Partida'}</div>
+
+                    <!-- Palpite e Valores -->
+                    <div class="card-palpite-info">
+                        Palpite: <strong style="color: var(--brand-orange);">${ap.selecao}</strong> | 
+                        Odd: <strong>${ap.odd}</strong> | 
+                        Entrada: <strong>R$ ${parseFloat(ap.valor || 0).toFixed(2)}</strong> | 
+                        Retorno: <strong style="color: var(--green);">R$ ${parseFloat(ap.retorno || 0).toFixed(2)}</strong>
+                    </div>
+
+                    <!-- Botão Resultados Centralizado logo abaixo do Palpite e Valor -->
+                    <div class="card-actions-resultados">
+                        ${botaoStatsHtml}
+                    </div>
+
+                    <!-- Barra inferior com a opção Mudar Status centralizada -->
+                    <div class="bet-actions-wrapper">
+                        <span class="bet-actions-label">Mudar Status:</span>
+                        <div class="bet-actions-row">
+                            <button class="btn btn-win" onclick="alterarStatus('${ap.userId}', '${ap.idUnico}', 'Ganha')">Ganha ✅</button>
+                            <button class="btn btn-loss" onclick="alterarStatus('${ap.userId}', '${ap.idUnico}', 'Perdida')">Perdida ❌</button>
+                            <button class="btn btn-pendente" onclick="alterarStatus('${ap.userId}', '${ap.idUnico}', 'Pendente')">Pendente ⏳</button>
+                            <button class="btn btn-cancelar" onclick="cancelarAposta('${ap.userId}', '${ap.idUnico}')">Cancelar 🚫</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    function abrirModalStats(urlStats, idJogo, nomePartida) {
+        const modal = document.getElementById('statsModal');
+        const iframe = document.getElementById('statsIframe');
+        const titulo = document.getElementById('modalTitulo');
+
+        titulo.textContent = nomePartida ? `Estatísticas: ${nomePartida}` : "Resultados da Partida";
+
+        let destino = '';
+        if (urlStats) {
+            destino = urlStats;
+        } else if (idJogo) {
+            destino = `https://eventsstat.com/en/services-api/SiteService/Game?gameId=${idJogo}&ln=pt`;
+        }
+
+        if (!destino) {
+            alert("Esta aposta não possui URL ou ID de estatísticas salvo.");
+            return;
+        }
+
+        iframe.src = destino;
+        modal.style.display = 'flex';
+    }
+
+    function fecharModalStats() {
+        const modal = document.getElementById('statsModal');
+        const iframe = document.getElementById('statsIframe');
+        modal.style.display = 'none';
+        iframe.src = '';
+    }
+
+    async function alterarStatus(userId, idUnico, novoStatus) {
+        const card = document.getElementById(`card_${idUnico}`);
+        if (card) card.style.opacity = '0.4';
+
+        try {
+            const userRef = db.collection("usuarios").doc(userId);
+            const userSnap = await userRef.get();
+
+            if (!userSnap.exists) return alert("Usuário não encontrado.");
+
+            const userData = userSnap.data();
+            let historico = Array.isArray(userData.historicoApostas) ? userData.historicoApostas : [];
+            let saldo = typeof userData.saldo === 'number' ? userData.saldo : 10000.00;
+
+            const aposta = historico.find(a => a.idUnico === idUnico);
+            if (!aposta) return alert("Aposta não localizada.");
+
+            const statusAnterior = (aposta.status || 'pendente').toLowerCase();
+            const statusDestino = novoStatus.toLowerCase();
+            const retornoVal = parseFloat(aposta.retorno || 0);
+            const valorApostado = parseFloat(aposta.valor || 0);
+
+            if (statusAnterior === 'cancelada') {
+                saldo -= valorApostado;
+                if (saldo < 0) saldo = 0;
+            }
+
+            if ((statusAnterior === 'ganha' || statusAnterior === 'ganhou') && aposta.recompensado && statusDestino !== 'ganha') {
+                saldo -= retornoVal;
+                if (saldo < 0) saldo = 0;
+                aposta.recompensado = false;
+            }
+
+            if (statusDestino === 'ganha' && !aposta.recompensado) {
+                saldo += retornoVal;
+                aposta.recompensado = true;
+            }
+
+            if (statusDestino === 'pendente') {
+                aposta.jaPediuVerificacao = false;
+                delete aposta.resolvidoPor;
+            } else {
+                aposta.jaPediuVerificacao = true;
+                aposta.resolvidoPor = 'admin';
+            }
+
+            aposta.status = novoStatus;
+
+            await userRef.update({
+                historicoApostas: historico,
+                saldo: saldo
+            });
+
+            await carregarApostas();
+        } catch (e) {
+            alert("Erro ao atualizar status: " + e.message);
+            if (card) card.style.opacity = '1';
+        }
+    }
+
+    async function cancelarAposta(userId, idUnico) {
+        if (!confirm("Deseja realmente cancelar esta aposta? O valor apostado será integralmente estornado para o saldo do usuário.")) {
+            return;
+        }
+
+        const card = document.getElementById(`card_${idUnico}`);
+        if (card) card.style.opacity = '0.4';
+
+        try {
+            const userRef = db.collection("usuarios").doc(userId);
+            const userSnap = await userRef.get();
+
+            if (!userSnap.exists) return alert("Usuário não encontrado.");
+
+            const userData = userSnap.data();
+            let historico = Array.isArray(userData.historicoApostas) ? userData.historicoApostas : [];
+            let saldo = typeof userData.saldo === 'number' ? userData.saldo : 10000.00;
+
+            const aposta = historico.find(a => a.idUnico === idUnico);
+            if (!aposta) return alert("Aposta não localizada.");
+
+            const statusAnterior = (aposta.status || 'pendente').toLowerCase();
+            const retornoVal = parseFloat(aposta.retorno || 0);
+            const valorApostado = parseFloat(aposta.valor || 0);
+
+            if (statusAnterior === 'cancelada') {
+                alert("Esta aposta já está cancelada.");
+                if (card) card.style.opacity = '1';
+                return;
+            }
+
+            if ((statusAnterior === 'ganha' || statusAnterior === 'ganhou') && aposta.recompensado) {
+                saldo -= retornoVal;
+                aposta.recompensado = false;
+            }
+
+            saldo += valorApostado;
+
+            aposta.status = 'Cancelada';
+            aposta.jaPediuVerificacao = false;
+            aposta.resolvidoPor = 'admin';
+
+            await userRef.update({
+                historicoApostas: historico,
+                saldo: saldo
+            });
+
+            await carregarApostas();
+        } catch (e) {
+            alert("Erro ao cancelar aposta: " + e.message);
+            if (card) card.style.opacity = '1';
+        }
+    }
+</script>
+
+</body>
+</html>
