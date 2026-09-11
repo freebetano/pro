@@ -95,7 +95,7 @@ function gerarUrlEstatisticas(jogo) {
     const esporteIngles = esportesTraducaoIngles[nomeEsporteBruto] || nomeEsporteBruto.replace(/\s+/g, '-') || "football";
     const gameId = jogo.statisticInfo.gameId;
 
-    return `https://eventsstat.com/en/statisticpopup/game/${esporteIngles}/${gameId}/main`;
+    return `https://eventsstat.com/pt/statisticpopup/game/${esporteIngles}/${gameId}/main`;
 }
 
 function abrirEstatisticasModal(jogoId) {
