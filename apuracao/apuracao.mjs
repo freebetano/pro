@@ -45,14 +45,14 @@ async function rodarBotApurgacao() {
                 if (statusAtual === "pendente") {
                     console.log(`    ⏳ Analisando dados via JSON oficial: [${aposta.partida}] -> Palpite: "${aposta.selecao}"`);
 
-                    // Consulta o Gemini passando o JSON estruturado obtido através da urlStats
-                    const vereditoGemini = await consultarGeminiComJson(aposta);
+                    // Consulta e validação com trava de término e auditoria do Gemini
+                    const veredito = await consultarGeminiComJson(aposta);
 
-                    console.log(`    🤖 Veredito do Gemini: ${vereditoGemini.status} (${vereditoGemini.motivo})`);
+                    console.log(`    🤖 Veredito final: ${veredito.status} (${veredito.motivo})`);
 
-                    // Se o Gemini definiu como Ganha ou Perdida, atualiza o status na aposta
-                    if (vereditoGemini.status === "Ganha" || vereditoGemini.status === "Perdida") {
-                        aposta.status = vereditoGemini.status;
+                    // Se foi definido como Ganha ou Perdida, atualiza o status na aposta
+                    if (veredito.status === "Ganha" || veredito.status === "Perdida") {
+                        aposta.status = veredito.status;
                         houveAlteracao = true;
                     }
                 }
@@ -63,7 +63,7 @@ async function rodarBotApurgacao() {
                 await db.collection("usuarios").doc(userId).update({
                     historicoApostas: historico
                 });
-                console.log(`    ✅ Firestore atualizado para o usuário ${userId}! O front-end calculará o saldo automaticamente.`);
+                console.log(`    ✅ Firestore atualizado para o usuário ${userId}!`);
             } else {
                 console.log(`    ✨ Nenhuma alteração necessária para este usuário.`);
             }
@@ -87,44 +87,72 @@ async function consultarGeminiComJson(aposta) {
     }
 
     const url = `https://eventsstat.com/en/services-api/SiteService/Game?gameId=${gameId}&ln=pt`;
-    
     console.log(`    🌐 Baixando dados oficiais da API: ${url}`);
     
     try {
         const responseApi = await fetch(url);
         const dadosPartida = await responseApi.json();
-        
+
+        // 🛑 TRAVA DEFINITIVA DE STATUS (API eventsstat):
+        // St = 1: Não iniciado
+        // St = 2: Em andamento / Ao vivo
+        // St = 3: Encerrado / Finalizado
+        if (dadosPartida.St !== 3) {
+            const estadoTexto = dadosPartida.St === 2 ? "Jogo em andamento (Ao Vivo)" : "Jogo ainda não iniciado";
+            console.log(`    ⏳ [TRAVA DE SEGURANÇA] Partida não finalizada (St: ${dadosPartida.St} - ${estadoTexto}). Pulando chamada de IA.`);
+            return { 
+                status: "Pendente", 
+                motivo: `${estadoTexto}. Apuração ignorada até o apito final.` 
+            };
+        }
+
+        console.log(`    🟢 Jogo confirmado como FINALIZADO (St: 3). Enviando para validação da IA...`);
+
+        // Enviamos apenas o resumo do placar e estatísticas para não poluir o contexto
         const prompt = `
-            Você é um motor analítico de apuração de apostas esportivas altamente técnico e preciso.
-            
-            Analise o JSON oficial da partida fornecido abaixo e determine o status exato da aposta.
-            - Partida: "${aposta.partida}"
-            - Palpite do usuário: "${aposta.selecao}"
-            - Dados oficiais da partida (JSON): ${JSON.stringify(dadosPartida)}
+Você é um auditor rigoroso de resultados esportivos.
+A partida já está CONFIRMADA COMO ENCERRADA. Sua tarefa é auditar se o palpite do apostador foi vitorioso ("Ganha") ou derrotado ("Perdida").
 
-            Regras estritas para definir o status:
-            1. "Pendente": Se o jogo ainda não terminou ou o JSON indicar que está em andamento.
-            2. "Ganha": Se os dados do JSON provam inquestionavelmente que a condição do palpite ("${aposta.selecao}") ocorreu.
-            3. "Perdida": Se os dados do JSON provam que o evento terminou e o palpite NÃO ocorreu.
+Detalhes da Aposta:
+- Partida: "${aposta.partida}"
+- Palpite / Mercado: "${aposta.selecao}"
 
-            Responda APENAS em formato JSON estrito, sem blocos de código markdown ou textos adicionais, exatamente assim:
-            {
-                "status": "Ganha" (ou "Perdida" ou "Pendente"),
-                "motivo": "Explicação técnica curta baseada nos dados do JSON"
-            }
-        `;
+Resultado Oficial Definitivo da Partida:
+- Placar Final Mandante (S1): ${dadosPartida.S1}
+- Placar Final Visitante (S2): ${dadosPartida.S2}
+- Estatísticas complementares (escanteios, cartões, chutes): ${JSON.stringify(dadosPartida.U || [])}
+
+Regras Obrigatórias:
+1. Retorne "Ganha" se o placar ou estatísticas confirmam que o palpite bateu.
+2. Retorne "Perdida" se o placar ou estatísticas confirmam que o palpite NÃO bateu.
+3. Retorne "Pendente" somente se os dados estiverem visivelmente corrompidos ou o evento foi anulado/adiado.
+4. Forneça uma explicação técnica e concisa no campo "motivo".
+`;
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "OBJECT",
+                    properties: {
+                        status: { 
+                            type: "STRING", 
+                            enum: ["Ganha", "Perdida", "Pendente"] 
+                        },
+                        motivo: { type: "STRING" }
+                    },
+                    required: ["status", "motivo"]
+                }
+            }
         });
 
-        const textoLimpo = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(textoLimpo);
+        return JSON.parse(response.text);
 
     } catch (error) {
-        console.error("Erro ao buscar dados da API ou processar com o Gemini:", error);
-        return { status: "Pendente", motivo: "Erro ao consultar API de resultados" };
+        console.error("❌ Erro ao buscar dados da API ou processar com o Gemini:", error);
+        return { status: "Pendente", motivo: "Erro ao consultar API de resultados ou erro no modelo" };
     }
 }
 
