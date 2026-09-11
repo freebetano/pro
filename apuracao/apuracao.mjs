@@ -41,24 +41,25 @@ async function rodarBotApurgacao() {
                 let aposta = historico[i];
                 let statusAtual = (aposta.status || "").trim().toLowerCase();
 
-                // Processa apenas as apostas que estão pendentes
+                // Processa apenas as apostas que ainda estão pendentes
                 if (statusAtual === "pendente") {
                     console.log(`    ⏳ Analisando dados via JSON oficial: [${aposta.partida}] -> Palpite: "${aposta.selecao}"`);
 
-                    // Consulta e validação com trava de término e auditoria do Gemini
                     const veredito = await consultarGeminiComJson(aposta);
 
                     console.log(`    🤖 Veredito final: ${veredito.status} (${veredito.motivo})`);
 
-                    // Se foi definido como Ganha ou Perdida, atualiza o status na aposta
+                    // Atualiza status e apenas a data de resolução
                     if (veredito.status === "Ganha" || veredito.status === "Perdida") {
                         aposta.status = veredito.status;
+                        aposta.resolvidoEm = new Date().toLocaleString('pt-BR');
+                        aposta.jaPediuVerificacao = true;
                         houveAlteracao = true;
                     }
                 }
             }
 
-            // Se alguma aposta mudou de status, salva o array atualizado no Firestore
+            // Atualiza apenas o array do histórico no banco
             if (houveAlteracao) {
                 await db.collection("usuarios").doc(userId).update({
                     historicoApostas: historico
@@ -77,7 +78,6 @@ async function rodarBotApurgacao() {
 }
 
 async function consultarGeminiComJson(aposta) {
-    // Extrai o ID exato diretamente do campo urlStats salvo no banco
     const match = (aposta.urlStats || "").match(/\/([a-f0-9]{24})\/main/i);
     const gameId = match ? match[1] : null;
 
@@ -93,10 +93,8 @@ async function consultarGeminiComJson(aposta) {
         const responseApi = await fetch(url);
         const dadosPartida = await responseApi.json();
 
-        // 🛑 TRAVA DEFINITIVA DE STATUS (API eventsstat):
-        // St = 1: Não iniciado
-        // St = 2: Em andamento / Ao vivo
-        // St = 3: Encerrado / Finalizado
+        // 🛑 TRAVA DE STATUS (API eventsstat):
+        // St = 1: Não iniciado | St = 2: Ao Vivo | St = 3: Encerrado
         if (dadosPartida.St !== 3) {
             const estadoTexto = dadosPartida.St === 2 ? "Jogo em andamento (Ao Vivo)" : "Jogo ainda não iniciado";
             console.log(`    ⏳ [TRAVA DE SEGURANÇA] Partida não finalizada (St: ${dadosPartida.St} - ${estadoTexto}). Pulando chamada de IA.`);
@@ -108,7 +106,6 @@ async function consultarGeminiComJson(aposta) {
 
         console.log(`    🟢 Jogo confirmado como FINALIZADO (St: 3). Enviando para validação da IA...`);
 
-        // Enviamos apenas o resumo do placar e estatísticas para não poluir o contexto
         const prompt = `
 Você é um auditor rigoroso de resultados esportivos.
 A partida já está CONFIRMADA COMO ENCERRADA. Sua tarefa é auditar se o palpite do apostador foi vitorioso ("Ganha") ou derrotado ("Perdida").
@@ -156,5 +153,5 @@ Regras Obrigatórias:
     }
 }
 
-// Executa a apuração imediatamente ao chamar o script
+// Executa a apuração imediatamente
 rodarBotApurgacao();
