@@ -217,30 +217,31 @@
 
         .btn-google { background: #fff; color: #000; }
 
-        /* Controles: Linha centralizada exibindo apenas o seletor */
+        /* Controles: Linha responsiva centralizada */
         .controles-barra {
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 16px;
             margin-bottom: 1.4rem;
             width: 100%;
+            flex-wrap: wrap;
         }
 
-        .select-usuario-container {
+        .controle-grupo {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
         }
 
-        .select-usuario-container label {
+        .controle-grupo label {
             font-size: 0.85rem;
             color: var(--text-muted);
             font-weight: 600;
             white-space: nowrap;
         }
 
-        .select-usuario {
+        .select-controle {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-main);
@@ -251,10 +252,10 @@
             line-height: 38px;
             outline: none;
             cursor: pointer;
-            width: 280px;
+            min-width: 210px;
         }
 
-        .select-usuario:focus {
+        .select-controle:focus {
             border-color: var(--brand-orange);
         }
 
@@ -312,6 +313,10 @@
             margin-bottom: 0.6rem;
             border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
             padding-bottom: 0.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .card-row-status {
@@ -471,10 +476,15 @@
                 height: 32px;
             }
             .controles-barra {
-                flex-wrap: wrap;
+                flex-direction: column;
+                align-items: stretch;
             }
-            .select-usuario {
-                max-width: 100%;
+            .controle-grupo {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .select-controle {
+                width: 100%;
             }
         }
     </style>
@@ -501,12 +511,25 @@
 
 <div class="container">
     <div id="painelContent" style="display: none;">
-        <!-- Barra de Controle com apenas o seletor centralizado -->
+        <!-- Barra de Controle: Filtro por Usuário e Ordenação -->
         <div class="controles-barra">
-            <div class="select-usuario-container">
-                <label for="selectUsuario">Filtrar por Usuário:</label>
-                <select id="selectUsuario" class="select-usuario" onchange="selecionarUsuario(this.value)">
+            <div class="controle-grupo">
+                <label for="selectUsuario">Filtrar Usuário:</label>
+                <select id="selectUsuario" class="select-controle" onchange="selecionarUsuario(this.value)">
                     <option value="todos">Todos os Usuários</option>
+                </select>
+            </div>
+
+            <div class="controle-grupo">
+                <label for="selectOrdem">Ordenar por:</label>
+                <select id="selectOrdem" class="select-controle" onchange="selecionarOrdem(this.value)">
+                    <option value="data_desc">Horário da Aposta (Mais Recente)</option>
+                    <option value="data_asc">Horário da Aposta (Mais Antiga)</option>
+                    <option value="resolvido_desc">Horário Resolvido (Mais Recente)</option>
+                    <option value="time_asc">Times / Confronto (A - Z)</option>
+                    <option value="time_desc">Times / Confronto (Z - A)</option>
+                    <option value="user_asc">Usuário (A - Z)</option>
+                    <option value="user_desc">Usuário (Z - A)</option>
                 </select>
             </div>
         </div>
@@ -552,6 +575,7 @@
 
     let filtroAtual = 'pendentes';
     let usuarioSelecionado = 'todos';
+    let ordemAtual = 'data_desc';
     let apostasCarregadas = [];
 
     const authSection = document.getElementById('authSection');
@@ -650,6 +674,37 @@
         renderizar();
     }
 
+    function selecionarOrdem(ordem) {
+        ordemAtual = ordem;
+        renderizar();
+    }
+
+    // Utilitário para converter string ou timestamp em epoch milissegundos
+    function converterParaDataMs(valorData) {
+        if (!valorData) return 0;
+
+        // Se já for numérico ou timestamp
+        if (typeof valorData === 'number') return valorData;
+        if (valorData.seconds) return valorData.seconds * 1000;
+
+        const str = String(valorData).trim();
+        
+        // Formato brasileiro comum: DD/MM/YYYY ou DD/MM/YYYY HH:mm:ss
+        const matchBr = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+        if (matchBr) {
+            const dia = parseInt(matchBr[1], 10);
+            const mes = parseInt(matchBr[2], 10) - 1;
+            const ano = parseInt(matchBr[3], 10);
+            const hora = parseInt(matchBr[4] || 0, 10);
+            const min = parseInt(matchBr[5] || 0, 10);
+            const seg = parseInt(matchBr[6] || 0, 10);
+            return new Date(ano, mes, dia, hora, min, seg).getTime();
+        }
+
+        const parsed = Date.parse(str);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
     async function carregarApostas() {
         const container = document.getElementById('feedApostas');
         container.innerHTML = `<div class="empty-msg">Consultando apostas no Firestore...</div>`;
@@ -708,14 +763,14 @@
 
     function renderizar() {
         const container = document.getElementById('feedApostas');
-        let lista = apostasCarregadas;
+        let lista = [...apostasCarregadas];
 
         // 1. Filtro por Usuário
         if (usuarioSelecionado !== 'todos') {
             lista = lista.filter(a => a.userId === usuarioSelecionado);
         }
 
-        // 2. Filtro por Abas
+        // 2. Filtro por Status / Abas
         if (filtroAtual === 'pendentes') {
             lista = lista.filter(a => (a.status || 'pendente').toLowerCase() === 'pendente' && !a.jaPediuVerificacao);
         } else if (filtroAtual === 'revisao') {
@@ -745,6 +800,28 @@
                 return resolvida && a.resolvidoPor !== 'admin';
             });
         }
+
+        // 3. Aplicação da Ordenação
+        lista.sort((a, b) => {
+            if (ordemAtual === 'time_asc') {
+                return (a.partida || '').localeCompare(b.partida || '');
+            } else if (ordemAtual === 'time_desc') {
+                return (b.partida || '').localeCompare(a.partida || '');
+            } else if (ordemAtual === 'user_asc') {
+                return (a.userName || '').localeCompare(b.userName || '');
+            } else if (ordemAtual === 'user_desc') {
+                return (b.userName || '').localeCompare(a.userName || '');
+            } else if (ordemAtual === 'data_asc') {
+                return converterParaDataMs(a.data || a.criadoEm) - converterParaDataMs(b.data || b.criadoEm);
+            } else if (ordemAtual === 'data_desc') {
+                return converterParaDataMs(b.data || b.criadoEm) - converterParaDataMs(a.data || a.criadoEm);
+            } else if (ordemAtual === 'resolvido_desc') {
+                const resA = converterParaDataMs(a.resolvidoEm || a.dataResolucao);
+                const resB = converterParaDataMs(b.resolvidoEm || b.dataResolucao);
+                return resB - resA;
+            }
+            return 0;
+        });
 
         if (lista.length === 0) {
             container.innerHTML = `<div class="empty-msg">Nenhuma aposta encontrada no filtro selecionado.</div>`;
@@ -779,6 +856,10 @@
             const idJogoVal = ap.idJogo || '';
             const nomePartidaEscaped = (ap.partida || '').replace(/'/g, "\\'");
 
+            const dataResolucaoTexto = ap.resolvidoEm 
+                ? `<span>• Resolvido em: ${ap.resolvidoEm}</span>` 
+                : '';
+
             const botaoStatsHtml = `
                 <button type="button" class="btn-ver-resultados" onclick="abrirModalStats('${urlStatsVal}', '${idJogoVal}', '${nomePartidaEscaped}')" title="Ver Estatísticas da Partida">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand-orange);">
@@ -797,12 +878,13 @@
                         👤 <strong>${ap.userName}</strong>
                     </div>
 
-                    <!-- 2ª Linha: Data -->
+                    <!-- 2ª Linha: Horário da Aposta e Horário Resolvido -->
                     <div class="card-row-date">
-                        📅 ${ap.data || 'N/D'}
+                        <span>📅 Apostado em: ${ap.data || 'N/D'}</span>
+                        ${dataResolucaoTexto}
                     </div>
 
-                    <!-- 3ª Linha: Status e quem resolveu (Centralizado) -->
+                    <!-- 3ª Linha: Status e quem resolveu -->
                     <div class="card-row-status">
                         <span style="color: ${corStatus}; font-weight: bold; text-transform: uppercase; font-size: 0.85rem;">
                             ${ap.status || 'Pendente'}
@@ -811,7 +893,7 @@
                         ${tagResolucao}
                     </div>
 
-                    <!-- Próximas Linhas: Título do confronto -->
+                    <!-- Título do confronto -->
                     <div class="card-confronto">${ap.partida || 'Partida'}</div>
 
                     <!-- Palpite e Valores -->
@@ -822,12 +904,12 @@
                         Retorno: <strong style="color: var(--green);">R$ ${parseFloat(ap.retorno || 0).toFixed(2)}</strong>
                     </div>
 
-                    <!-- Botão Resultados Centralizado logo abaixo do Palpite e Valor -->
+                    <!-- Botão Resultados -->
                     <div class="card-actions-resultados">
                         ${botaoStatsHtml}
                     </div>
 
-                    <!-- Barra inferior com a opção Mudar Status centralizada -->
+                    <!-- Mudar Status -->
                     <div class="bet-actions-wrapper">
                         <span class="bet-actions-label">Mudar Status:</span>
                         <div class="bet-actions-row">
@@ -912,12 +994,16 @@
                 aposta.recompensado = true;
             }
 
+            const agoraFormatado = new Date().toLocaleString('pt-BR');
+
             if (statusDestino === 'pendente') {
                 aposta.jaPediuVerificacao = false;
                 delete aposta.resolvidoPor;
+                delete aposta.resolvidoEm;
             } else {
                 aposta.jaPediuVerificacao = true;
                 aposta.resolvidoPor = 'admin';
+                aposta.resolvidoEm = agoraFormatado;
             }
 
             aposta.status = novoStatus;
@@ -975,6 +1061,7 @@
             aposta.status = 'Cancelada';
             aposta.jaPediuVerificacao = false;
             aposta.resolvidoPor = 'admin';
+            aposta.resolvidoEm = new Date().toLocaleString('pt-BR');
 
             await userRef.update({
                 historicoApostas: historico,
